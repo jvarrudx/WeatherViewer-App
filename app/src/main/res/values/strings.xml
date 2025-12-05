@@ -1,6 +1,7 @@
 <resources>
-    <string name="api_key">AgentWeather2024_a8f3b9c1d7e2f5g6h4i9j0k112m3n4o5p6</string>
+    <string name="app_name">WeatherViewer</string>
 
+    <string name="api_key">AgentWeather2024_a8f3b9c1d7e2f5g6h4i9j0k112m3n4o5p6</string>
     <string name="web_service_url">http://agent-weathermap-env-env.eba-6pzgqekp.us-east-2.elasticbeanstalk.com/api/weather</string>
 
     <string name="invalid_url">URL Inválida</string>
@@ -11,6 +12,5 @@
     <string name="humidity">Umidade: %s</string>
     <string name="hint_text">Insira a cidade (ex: Passos, MG, BR)</string>
     <string name="read_error">Não foi possível ler os dados do tempo</string>
-    <string name="connect_error">Não foi possível conectar a OpenWeatherMap.org</string>
-
+    <string name="connect_error">Não foi possível conectar</string>
 </resources>
