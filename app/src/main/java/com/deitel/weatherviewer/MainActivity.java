@@ -7,17 +7,13 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ListView;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
-import org.json.JSONObject;
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -31,28 +27,45 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
 
     private EditText locationEditText;
-
-    private ArrayList<Weather> weatherList = new ArrayList<>();
+    private ArrayList<Weather> weatherList;
     private WeatherArrayAdapter weatherArrayAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
 
         locationEditText = findViewById(R.id.locationEditText);
         FloatingActionButton fab = findViewById(R.id.fab);
 
+        weatherList = new ArrayList<>();
+        weatherArrayAdapter = new WeatherArrayAdapter(this, weatherList);
+
+        ListView listView = findViewById(R.id.weatherListView);
+        listView.setAdapter(weatherArrayAdapter);
+
+        // Mensagem inicial (evita tela vazia)
+        weatherList.add(
+                new Weather(
+                        "Digite uma cidade",
+                        0,
+                        0,
+                        0,
+                        "e toque no botão",
+                        ""
+                )
+        );
+        weatherArrayAdapter.notifyDataSetChanged();
+
         fab.setOnClickListener(v -> {
             String location = locationEditText.getText().toString().trim();
             dismissKeyboard(locationEditText);
+
+            if (location.isEmpty()) {
+                Snackbar.make(findViewById(R.id.coordinatorLayout),
+                        "Digite uma cidade", Snackbar.LENGTH_SHORT).show();
+                return;
+            }
 
             URL url = createURL(location);
 
@@ -63,11 +76,6 @@ public class MainActivity extends AppCompatActivity {
                         R.string.invalid_url, Snackbar.LENGTH_LONG).show();
             }
         });
-
-        // Inicializa o Adapter e o ListView
-        weatherArrayAdapter = new WeatherArrayAdapter(this, weatherList);
-        ListView listView = findViewById(R.id.weatherListView);
-        listView.setAdapter(weatherArrayAdapter);
     }
 
     private void dismissKeyboard(View view) {
@@ -132,8 +140,8 @@ public class MainActivity extends AppCompatActivity {
 
             try {
                 connection = (HttpURLConnection) params[0].openConnection();
-                connection.setConnectTimeout(10000);
-                connection.setReadTimeout(10000);
+                connection.setConnectTimeout(3000);
+                connection.setReadTimeout(3000);
 
                 if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
                     return null;

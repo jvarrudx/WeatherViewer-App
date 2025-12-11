@@ -10,12 +10,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <EditText
+        <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/locationEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:hint="@string/hint_text" />
+            android:hint="@string/hint_text"
+            android:singleLine="true" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <ListView

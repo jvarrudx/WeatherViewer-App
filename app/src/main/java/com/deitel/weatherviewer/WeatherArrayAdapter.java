@@ -14,7 +14,7 @@ public class WeatherArrayAdapter extends ArrayAdapter<Weather> {
     private final LayoutInflater inflater;
 
     public WeatherArrayAdapter(Context context, List<Weather> forecast) {
-        super(context, R.layout.list_item, forecast);
+        super(context, 0, forecast);
         inflater = LayoutInflater.from(context);
     }
 
@@ -41,24 +41,16 @@ public class WeatherArrayAdapter extends ArrayAdapter<Weather> {
         Weather day = getItem(position);
 
         if (day != null) {
-            // ICON
+
             holder.iconTextView.setText(day.icon);
 
-            // Dia + descrição (ex: "Wednesday - Céu limpo")
-            holder.dayTextView.setText(day.dayOfWeek + " - " + day.description);
-
-            // Temperaturas formatadas
-            holder.lowTextView.setText(
-                    getContext().getString(R.string.low_temp, day.minTemp)
+            holder.dayTextView.setText(
+                    day.dayOfWeek + " - " + day.description
             );
 
-            holder.hiTextView.setText(
-                    getContext().getString(R.string.high_temp, day.maxTemp)
-            );
-
-            holder.humidityTextView.setText(
-                    getContext().getString(R.string.humidity, day.humidity)
-            );
+            holder.lowTextView.setText(day.minTemp);
+            holder.hiTextView.setText(day.maxTemp);
+            holder.humidityTextView.setText(day.humidity);
         }
 
         return convertView;
@@ -72,4 +64,3 @@ public class WeatherArrayAdapter extends ArrayAdapter<Weather> {
         TextView humidityTextView;
     }
 }
-
