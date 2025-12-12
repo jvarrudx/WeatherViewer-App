@@ -1,11 +1,14 @@
 package com.deitel.weatherviewer;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView; // Importação adicionada
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -20,13 +23,14 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import android.os.AsyncTask;
-
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "WeatherViewer"; // Tag para Logcat
     private EditText locationEditText;
+    private ListView weatherListView; // Variável para o ListView
+    private TextView placeholderTextView; // Novo TextView para placeholder
     private ArrayList<Weather> weatherList;
     private WeatherArrayAdapter weatherArrayAdapter;
 
@@ -35,27 +39,28 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        locationEditText = findViewById(R.id.locationEditText);
+        // Acessa o layout incluído para encontrar os views dentro dele
+        View contentMain = findViewById(R.id.content_main_include);
+
+        // **CORREÇÃO 1: Acessando Views corretamente dentro do content_main**
+        locationEditText = contentMain.findViewById(R.id.locationEditText);
+        weatherListView = contentMain.findViewById(R.id.weatherListView);
+
+        // **CORREÇÃO 2: Buscando o TextView simples para o placeholder**
+        placeholderTextView = contentMain.findViewById(R.id.placeholderTextView);
+
         FloatingActionButton fab = findViewById(R.id.fab);
 
         weatherList = new ArrayList<>();
         weatherArrayAdapter = new WeatherArrayAdapter(this, weatherList);
 
-        ListView listView = findViewById(R.id.weatherListView);
-        listView.setAdapter(weatherArrayAdapter);
+        weatherListView.setAdapter(weatherArrayAdapter);
 
-        // Mensagem inicial (evita tela vazia)
-        weatherList.add(
-                new Weather(
-                        "Digite uma cidade",
-                        0,
-                        0,
-                        0,
-                        "e toque no botão",
-                        ""
-                )
-        );
-        weatherArrayAdapter.notifyDataSetChanged();
+        // Mensagem inicial (Remoção do placeholder Weather e uso do TextView simples)
+        if (weatherList.isEmpty() && placeholderTextView != null) {
+            placeholderTextView.setVisibility(View.VISIBLE);
+            weatherListView.setVisibility(View.GONE); // Garante que a lista não apareça se vazia
+        }
 
         fab.setOnClickListener(v -> {
             String location = locationEditText.getText().toString().trim();
@@ -65,6 +70,12 @@ public class MainActivity extends AppCompatActivity {
                 Snackbar.make(findViewById(R.id.coordinatorLayout),
                         "Digite uma cidade", Snackbar.LENGTH_SHORT).show();
                 return;
+            }
+
+            // Oculta a mensagem de placeholder ao iniciar a busca
+            if (placeholderTextView != null) {
+                placeholderTextView.setVisibility(View.GONE);
+                weatherListView.setVisibility(View.VISIBLE); // Mostra a lista (que será atualizada)
             }
 
             URL url = createURL(location);
@@ -98,9 +109,11 @@ public class MainActivity extends AppCompatActivity {
                     + "&days=" + days
                     + "&APPID=" + apiKey;
 
+            Log.d(TAG, "URL de Requisição: " + urlString);
             return new URL(urlString);
 
         } catch (Exception e) {
+            Log.e(TAG, "Erro ao criar URL", e);
             return null;
         }
     }
@@ -109,11 +122,15 @@ public class MainActivity extends AppCompatActivity {
         weatherList.clear();
 
         try {
+            // Acessando o array 'days' que contém a previsão (conforme PDF)
             JSONArray daysArray = forecast.getJSONArray("days");
+            Log.d(TAG, "Parsing JSON: Encontrados " + daysArray.length() + " dias.");
 
             for (int i = 0; i < daysArray.length(); i++) {
                 JSONObject day = daysArray.getJSONObject(i);
 
+                // Mapeamento das chaves (date, minTempC, maxTempC, humidity, description, icon)
+                // Os nomes das chaves são verificados no Logcat se ocorrer um JSONException
                 String date = day.getString("date");
                 double min = day.getDouble("minTempC");
                 double max = day.getDouble("maxTempC");
@@ -127,6 +144,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
         } catch (Exception e) {
+            // **CORREÇÃO 3: Logging detalhado para JSONException**
+            Log.e(TAG, "Erro ao converter JSON ou JSON malformado", e);
             Snackbar.make(findViewById(R.id.coordinatorLayout),
                     R.string.read_error, Snackbar.LENGTH_LONG).show();
         }
@@ -140,10 +159,13 @@ public class MainActivity extends AppCompatActivity {
 
             try {
                 connection = (HttpURLConnection) params[0].openConnection();
-                connection.setConnectTimeout(3000);
-                connection.setReadTimeout(3000);
+                connection.setConnectTimeout(5000); // Aumentei o timeout
+                connection.setReadTimeout(5000);    // Aumentei o timeout
 
-                if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                int responseCode = connection.getResponseCode();
+
+                if (responseCode != HttpURLConnection.HTTP_OK) {
+                    Log.e(TAG, "HTTP Error: Response Code " + responseCode);
                     return null;
                 }
 
@@ -161,6 +183,7 @@ public class MainActivity extends AppCompatActivity {
                 return new JSONObject(builder.toString());
 
             } catch (Exception e) {
+                Log.e(TAG, "Erro de conexão/IO no doInBackground", e); // Logging de erro de rede
                 return null;
 
             } finally {
@@ -171,16 +194,33 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(JSONObject json) {
             if (json == null) {
+                // Exibe erro de conexão
                 Snackbar.make(findViewById(R.id.coordinatorLayout),
                         R.string.connect_error, Snackbar.LENGTH_LONG).show();
+
+                // Se falhar, reexibe a mensagem inicial e oculta a lista
+                weatherListView.setVisibility(View.GONE);
+                if (placeholderTextView != null) {
+                    placeholderTextView.setVisibility(View.VISIBLE);
+                }
                 return;
             }
 
             convertJSONtoArrayList(json);
             weatherArrayAdapter.notifyDataSetChanged();
 
-            Snackbar.make(findViewById(R.id.coordinatorLayout),
-                    "Previsão atualizada", Snackbar.LENGTH_SHORT).show();
+            if (weatherList.isEmpty()) {
+                // Caso a API retorne JSON válido, mas sem dias de previsão
+                Snackbar.make(findViewById(R.id.coordinatorLayout),
+                        "Nenhuma previsão encontrada para esta cidade.", Snackbar.LENGTH_LONG).show();
+                weatherListView.setVisibility(View.GONE);
+                if (placeholderTextView != null) placeholderTextView.setVisibility(View.VISIBLE);
+            } else {
+                Snackbar.make(findViewById(R.id.coordinatorLayout),
+                        "Previsão atualizada", Snackbar.LENGTH_SHORT).show();
+                weatherListView.setVisibility(View.VISIBLE);
+                if (placeholderTextView != null) placeholderTextView.setVisibility(View.GONE);
+            }
         }
     }
 }
