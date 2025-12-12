@@ -12,14 +12,14 @@ Trabalho prático da disciplina de **Programação III**, desenvolvido com base 
 Este aplicativo consome um Web Service RESTful de previsão do tempo e apresenta as informações de maneira clara e acessível ao usuário. Ao contrário do exemplo do livro (que utiliza OpenWeatherMap), este trabalho foi adaptado para:
 
 - Conectar-se a uma API específica fornecida pelo professor (hospedada na AWS).  
-- Trabalhar com um JSON simplificado que contém um array `days`.  
+- Trabalhar com um JSON simplificado que contém um array days.  
 - Mostrar ícones meteorológicos usando Emojis em texto(⛅), evitando download de imagens.  
 
 
 ---
 
 ## 💻 Recursos Principais
-- **Pesquisa por cidade** — Permite inserir o nome da cidade no formato `Cidade, UF, PAÍS` (ex.: `Sao Paulo, SP, BR`) para obter a previsão.   
+- **Pesquisa por cidade** — Permite inserir o nome da cidade no formato Cidade, UF, PAÍS (ex.: `Sao Paulo, SP, BR`) para obter a previsão.   
 - **Chamadas assíncronas** — Utiliza `AsyncTask` para realizar requisições de rede sem bloquear a UI.   
 - **Lista customizada de dias** — Cada item exibe:
   - Emoji representando o clima;
@@ -45,8 +45,29 @@ A API retorna um objeto contendo um array chamado `days`. Cada elemento possui a
      "humidity": 0.75,
      "icon": "⛅"
 }
+```
+# 📸 Print da Aplicação
+<img src="screenshots/PRINT WEATHERVIEWER.png" width="250">
 
-## 📱 Print da Aplicação
+## 🛠️ Como Executar a Aplicação
+
+### Pré-requisitos
+* Android Studio instalado.
+* Emulador Android ou celular com Android 6.0+.
+* Conexão com a Internet.
+
+### Passo a Passo
+1.  Clone este repositório:
+    ```bash
+    git clone https://github.com/jvarrudx/WeatherViewer-App.git
+    ```
+2.  Abra o projeto no Android Studio.
+3.  Espere carregar o Gradle.
+4.  Execute a aplicação clicando no botão **Run** (▶️).
+5.  No campo de texto, digite o local seguindo o padrão `Cidade, Estado, Pais`.
+    * Exemplo: `Passos, MG, BR`
+    * Exemplo: `Sao Paulo, SP, BR`
+
 
 
 
